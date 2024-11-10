@@ -1,58 +1,86 @@
 import pyautogui
 import keyboard
 import time
+import tkinter as tk
+from threading import Thread
 
+# Координаты ползунка и кнопки на экране
 x_energy_bar = 1737
 y_energy_bar = 351
 x_status = 1712
 y_status = 486
 x_button = 1740
 y_button = 573
+energy_bar_position = (x_energy_bar, y_energy_bar)
+status_position = (x_status, y_status)
+button_position = (x_button, y_button)
 
+# RGB цвета для проверки
+full_energy_color = (214, 227, 194)
+status_color = (228, 120, 102)
+
+# Время ожидания
 wait_time = 2400
 
-# Координаты ползунка и кнопки на экране
-energy_bar_position = (x_energy_bar, y_energy_bar)  # замените x и y на координаты ползунка
-status_position = (x_status, y_status)
-button_position = (x_button, y_button)  # замените a и b на координаты кнопки "Старт-стоп"
-
-# RGB цвет полностью накопленной энергии (укажите цвет, который отображается при полном уровне)
-full_energy_color = (214, 227, 194)  # замените r, g, b на реальные значения RGB
-status_color = (228, 120, 102) 
-
-# Переменная для отслеживания состояния паузы
+# Переменная для паузы
 paused = False
 
 def countdown(seconds):
-    while seconds > 0:
-        print(f"Осталось {seconds} секунд до нажатия на кнопку...", end="\r")
+    # Создаем окно таймера
+    timer_window = tk.Tk()
+    timer_window.title("Таймер до нажатия кнопки")
+    timer_window.geometry("300x100")
+
+    # Получаем размеры экрана
+    screen_width = timer_window.winfo_screenwidth()
+    screen_height = timer_window.winfo_screenheight()
+
+    # Вычисляем координаты для правого нижнего угла
+    x = screen_width - 340  # Ширина окна + отступ
+    y = screen_height - 200  # Высота окна + отступ
+    timer_window.geometry(f"330x100+{x}+{y}")
+
+    # Метка для отображения времени
+    label = tk.Label(timer_window, text="", font=("Arial", 20))
+    label.pack(expand=True)
+
+    def update_timer():
+        nonlocal seconds
+        while seconds > 0:
+            mins, secs = divmod(seconds, 60)
+            timer_text = f"Осталось {mins:02}:{secs:02} до старта"
+            label.config(text=timer_text)
+            time.sleep(1)
+            seconds -= 1
+            timer_window.update_idletasks()  # Обновляем окно
+        # Завершение отсчета
+        label.config(text="Нажатие кнопки!")
         time.sleep(1)
-        seconds -= 1
-    print()  # Перевод строки после завершения отсчета
+        timer_window.destroy()  # Закрываем окно таймера
+
+    # Запускаем таймер в отдельном потоке
+    countdown_thread = Thread(target=update_timer)
+    countdown_thread.start()
+    timer_window.mainloop()
 
 def check_energy_level():
-    # Получаем цвет пикселя на позиции ползунка энергии
     current_color = pyautogui.pixel(*energy_bar_position)
-    # Проверяем, совпадает ли цвет с ожидаемым цветом полностью накопленной энергии
     return current_color == full_energy_color
 
 def check_status():
-    # Получаем цвет пикселя на позиции статуса
     current_color = pyautogui.pixel(*status_position)
-    # Проверяем, совпадает ли цвет с ожидаемым цветом статуса
     return current_color == status_color
 
-# Обработчик для переключения состояния паузы
 def toggle_pause():
     global paused
     paused = not paused
     state = "пауза" if paused else "работа"
     print(f"Переключение: {state}")
 
-# Назначаем клавишу  для переключения паузы
-# keyboard.add_hotkey('', toggle_pause)
+# Назначаем клавишу ` для паузы
+# keyboard.add_hotkey('`', toggle_pause)
 
-print("Нажмите  для паузы и возобновления")
+print("Нажмите ` для паузы и возобновления")
 
 while True:
     if not paused:
@@ -60,18 +88,13 @@ while True:
             print("Low energy!!")
             pyautogui.click(button_position)
             print("Low energy, нажата кнопка Стоп")
-            # Ожидание, чтобы дать время энергии снова накапливаться
-            # Отсчет времени до следующего нажатия
+            
+            # Запускаем таймер в отдельном окне
             countdown(wait_time)
-            # Нажимаем кнопку снова
+            
+            # Нажимаем кнопку снова по завершении таймера
             pyautogui.click(button_position)
             print("Энергия накоплена, нажата кнопка Старт")
-        # if check_energy_level():
-        #     # Нажимаем на кнопку "Старт-стоп"
-        #     pyautogui.click(button_position)
-        #     print("Полная энергия, нажата кнопка Старт-стоп")
-        #     # Ожидание, чтобы дать время энергии снова накапливаться
-        #     time.sleep(600)
     else:
         print("Программа на паузе")
 
