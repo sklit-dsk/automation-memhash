@@ -5,21 +5,22 @@ import tkinter as tk
 from datetime import datetime
 import pygetwindow as gw
 import os
+import screeninfo
 
 # Координаты ползунка и кнопки на экране
 x_energy_bar = 1737
 y_energy_bar = 351
-x_status = 1701
-y_status = 372
-x_button = 1721
-y_button = 469
+x_status = 1660
+y_status = 464
+x_button = 1673
+y_button = 580
 energy_bar_position = (x_energy_bar, y_energy_bar)
 status_position = (x_status, y_status)
 button_position = (x_button, y_button)
 
 # RGB цвета для проверки
 full_energy_color = (214, 227, 194)
-status_color = (228, 120, 102)
+status_color = (255, 108, 101)
 
 # Время ожидания
 wait_time = 1800
@@ -34,6 +35,7 @@ def countdown(timer_window, seconds, label):
     def update_timer():
         nonlocal seconds
         if seconds > 0:
+            timer_window.attributes("-topmost", True)
             mins, secs = divmod(seconds, 60)
             timer_text = f"Осталось {mins:02}:{secs:02}"
             label.config(text=timer_text)
@@ -73,8 +75,25 @@ def toggle_pause():
 
 print("Нажмите ` для паузы и возобновления")
 
+target_window = gw.getWindowsWithTitle(target_window_title)
+if target_window:
+    # Активировать окно
+    target_window[0].activate()
+
+    # Получить размеры экрана
+    screen = screeninfo.get_monitors()[0]
+    screen_width = screen.width
+
+    # Установить окно в правый верхний угол
+    window_width = target_window[0].width
+    target_window[0].top = 0  # Верх экрана
+    target_window[0].left = screen_width - window_width  # Правый угол экрана
+time.sleep(5)
+pyautogui.click(button_position)
+
 while True:
     if not paused:
+        
         if check_status():
             print("Low energy!!")
             pyautogui.click(button_position)
