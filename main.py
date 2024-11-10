@@ -3,6 +3,8 @@ import keyboard
 import time
 import tkinter as tk
 from threading import Thread
+from datetime import datetime
+import os
 
 # Координаты ползунка и кнопки на экране
 x_energy_bar = 1737
@@ -20,10 +22,11 @@ full_energy_color = (214, 227, 194)
 status_color = (228, 120, 102)
 
 # Время ожидания
-wait_time = 2400
+wait_time = 1800
 
 # Переменная для паузы
 paused = False
+
 
 def countdown(seconds):
     # Создаем окно таймера
@@ -36,9 +39,9 @@ def countdown(seconds):
     screen_height = timer_window.winfo_screenheight()
 
     # Вычисляем координаты для правого нижнего угла
-    x = screen_width - 340  # Ширина окна + отступ
-    y = screen_height - 200  # Высота окна + отступ
-    timer_window.geometry(f"330x100+{x}+{y}")
+    x = screen_width - 320  # Ширина окна + отступ
+    y = screen_height - 150  # Высота окна + отступ
+    timer_window.geometry(f"300x100+{x}+{y}")
 
     # Метка для отображения времени
     label = tk.Label(timer_window, text="", font=("Arial", 20))
@@ -48,7 +51,7 @@ def countdown(seconds):
         nonlocal seconds
         while seconds > 0:
             mins, secs = divmod(seconds, 60)
-            timer_text = f"Осталось {mins:02}:{secs:02} до старта"
+            timer_text = f"Осталось {mins:02}:{secs:02}"
             label.config(text=timer_text)
             time.sleep(1)
             seconds -= 1
@@ -88,7 +91,7 @@ while True:
             print("Low energy!!")
             pyautogui.click(button_position)
             print("Low energy, нажата кнопка Стоп")
-            
+
             # Запускаем таймер в отдельном окне
             countdown(wait_time)
             
