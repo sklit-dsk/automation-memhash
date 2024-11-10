@@ -2,17 +2,17 @@ import pyautogui
 import keyboard
 import time
 import tkinter as tk
-from threading import Thread
 from datetime import datetime
+import pygetwindow as gw
 import os
 
 # Координаты ползунка и кнопки на экране
 x_energy_bar = 1737
 y_energy_bar = 351
-x_status = 1712
-y_status = 486
-x_button = 1740
-y_button = 573
+x_status = 1701
+y_status = 372
+x_button = 1721
+y_button = 469
 energy_bar_position = (x_energy_bar, y_energy_bar)
 status_position = (x_status, y_status)
 button_position = (x_button, y_button)
@@ -24,47 +24,35 @@ status_color = (228, 120, 102)
 # Время ожидания
 wait_time = 1800
 
+# Название другого окна, которое должно стать поверх всех
+target_window_title = "TelegramDesktop"  # Замените на название окна
+
 # Переменная для паузы
 paused = False
 
-
-def countdown(seconds):
-    # Создаем окно таймера
-    timer_window = tk.Tk()
-    timer_window.title("Таймер до нажатия кнопки")
-    timer_window.geometry("300x100")
-
-    # Получаем размеры экрана
-    screen_width = timer_window.winfo_screenwidth()
-    screen_height = timer_window.winfo_screenheight()
-
-    # Вычисляем координаты для правого нижнего угла
-    x = screen_width - 320  # Ширина окна + отступ
-    y = screen_height - 150  # Высота окна + отступ
-    timer_window.geometry(f"300x100+{x}+{y}")
-
-    # Метка для отображения времени
-    label = tk.Label(timer_window, text="", font=("Arial", 20))
-    label.pack(expand=True)
-
+def countdown(timer_window, seconds, label):
     def update_timer():
         nonlocal seconds
-        while seconds > 0:
+        if seconds > 0:
             mins, secs = divmod(seconds, 60)
             timer_text = f"Осталось {mins:02}:{secs:02}"
             label.config(text=timer_text)
-            time.sleep(1)
-            seconds -= 1
-            timer_window.update_idletasks()  # Обновляем окно
-        # Завершение отсчета
-        label.config(text="Нажатие кнопки!")
-        time.sleep(1)
-        timer_window.destroy()  # Закрываем окно таймера
 
-    # Запускаем таймер в отдельном потоке
-    countdown_thread = Thread(target=update_timer)
-    countdown_thread.start()
-    timer_window.mainloop()
+            if seconds == 15:
+                timer_window.attributes("-topmost", True)
+                target_window = gw.getWindowsWithTitle(target_window_title)
+                if target_window:
+                    target_window[0].activate()
+                    target_window[0].top = True
+
+            # Планируем обновление через 1 секунду
+            timer_window.after(1000, update_timer)
+            seconds -= 1
+        else:
+            label.config(text="Нажатие кнопки!")
+            timer_window.after(1000, timer_window.destroy)
+
+    update_timer()  # Запускаем таймер
 
 def check_energy_level():
     current_color = pyautogui.pixel(*energy_bar_position)
@@ -92,12 +80,34 @@ while True:
             pyautogui.click(button_position)
             print("Low energy, нажата кнопка Стоп")
 
-            # Запускаем таймер в отдельном окне
-            countdown(wait_time)
-            
+            # Создаем окно таймера
+            timer_window = tk.Tk()
+            timer_window.title("Таймер до нажатия кнопки")
+            timer_window.geometry("300x100")
+
+            # Получаем размеры экрана
+            screen_width = timer_window.winfo_screenwidth()
+            screen_height = timer_window.winfo_screenheight()
+
+            # Вычисляем координаты для правого нижнего угла
+            x = screen_width - 320  # Ширина окна + отступ
+            y = screen_height - 150  # Высота окна + отступ
+            timer_window.geometry(f"300x100+{x}+{y}")
+
+            # Метка для отображения времени
+            label = tk.Label(timer_window, text="", font=("Arial", 20))
+            label.pack(expand=True)
+
+            # Запускаем таймер в основном потоке с использованием after
+            countdown(timer_window, wait_time, label)
+
+            # Запуск окна
+            timer_window.mainloop()
+
             # Нажимаем кнопку снова по завершении таймера
             pyautogui.click(button_position)
             print("Энергия накоплена, нажата кнопка Старт")
+            time.sleep(5)
     else:
         print("Программа на паузе")
 
