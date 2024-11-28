@@ -6,23 +6,26 @@ from datetime import datetime
 import pygetwindow as gw
 import os
 import screeninfo
+<<<<<<< HEAD
 import win32gui
 import win32con
+=======
+>>>>>>> fc26bbae3f2c9906a13c75809e8b9622baf208a3
 
 # Координаты ползунка и кнопки на экране
 x_energy_bar = 1737
 y_energy_bar = 351
-x_status = 1701
-y_status = 372
-x_button = 1721
-y_button = 469
+x_status = 1660
+y_status = 464
+x_button = 1673
+y_button = 580
 energy_bar_position = (x_energy_bar, y_energy_bar)
 status_position = (x_status, y_status)
 button_position = (x_button, y_button)
 
 # RGB цвета для проверки
 full_energy_color = (214, 227, 194)
-status_color = (228, 120, 102)
+status_color = (255, 108, 101)
 
 # Время ожидания
 wait_time = 2400
@@ -108,6 +111,7 @@ pyautogui.click(button_position)
 
 while True:
     if not paused:
+        
         if check_status():
             print("Low energy!!")
             pyautogui.click(button_position)
