@@ -5,6 +5,9 @@ import tkinter as tk
 from datetime import datetime
 import pygetwindow as gw
 import os
+import screeninfo
+import win32gui
+import win32con
 
 # Координаты ползунка и кнопки на экране
 x_energy_bar = 1737
@@ -22,10 +25,23 @@ full_energy_color = (214, 227, 194)
 status_color = (228, 120, 102)
 
 # Время ожидания
-wait_time = 1800
+wait_time = 2400
 
 # Название другого окна, которое должно стать поверх всех
 target_window_title = "TelegramDesktop"  # Замените на название окна
+hwnd = win32gui.FindWindow(None, target_window_title)
+
+if hwnd:
+    # Установить флаг "всегда поверх"
+    win32gui.SetWindowPos(
+        hwnd, 
+        win32con.HWND_TOPMOST, 
+        0, 0, 0, 0, 
+        win32con.SWP_NOMOVE | win32con.SWP_NOSIZE
+    )
+    print(f"Окно '{target_window_title}' теперь всегда поверх других!")
+else:
+    print(f"Окно с названием '{target_window_title}' не найдено.")
 
 # Переменная для паузы
 paused = False
@@ -34,6 +50,7 @@ def countdown(timer_window, seconds, label):
     def update_timer():
         nonlocal seconds
         if seconds > 0:
+            timer_window.attributes("-topmost", True)
             mins, secs = divmod(seconds, 60)
             timer_text = f"Осталось {mins:02}:{secs:02}"
             label.config(text=timer_text)
@@ -73,6 +90,22 @@ def toggle_pause():
 
 print("Нажмите ` для паузы и возобновления")
 
+target_window = gw.getWindowsWithTitle(target_window_title)
+if target_window:
+    # Активировать окно
+    target_window[0].activate()
+
+    # Получить размеры экрана
+    screen = screeninfo.get_monitors()[0]
+    screen_width = screen.width
+
+    # Установить окно в правый верхний угол
+    window_width = target_window[0].width
+    target_window[0].top = 0  # Верх экрана
+    target_window[0].left = screen_width - window_width  # Правый угол экрана
+time.sleep(5)
+pyautogui.click(button_position)
+
 while True:
     if not paused:
         if check_status():
@@ -91,7 +124,7 @@ while True:
 
             # Вычисляем координаты для правого нижнего угла
             x = screen_width - 320  # Ширина окна + отступ
-            y = screen_height - 150  # Высота окна + отступ
+            y = screen_height - 180  # Высота окна + отступ
             timer_window.geometry(f"300x100+{x}+{y}")
 
             # Метка для отображения времени
